@@ -1,2 +1,2 @@
 # docker-sbom
-Action to ouput sbom report on a Docker image
+Generate a CycloneDX SBOM and uploads it to Dependency Track
