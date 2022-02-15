@@ -1,0 +1,107 @@
+name: Generate a CycloneDX SBOM and uploads it to Dependency Track
+description: |
+  Utilizes https://github.com/tern-tools/tern to generate a SBOM. This SBOM will then be archived and uploaded to Dependency-Track.
+
+inputs:
+  aws-access-key-id:
+    description: An AWS access key ID that has read permissions to the registry.
+    required: false
+    default: ''
+  aws-secret-access-key:
+    description: An AWS secret access key that has read permissions to the registry.
+    required: false
+    default: ''
+  aws-region:
+    description: AWS region for the registry.
+    required: false
+    default: ''
+  dependency-track-url:
+    description: URL to the Dependency Track instance to publish the SBOM to.
+    required: false
+  dependency-track-api-key:
+    description: API key of the Dependency Track instance.
+    required: false
+  dependency-track-project-name:
+    description: Project name for Dependency Track.
+    required: false
+  dependency-track-project-version:
+    description: Project name for Dependency Track. Typically the default branch unless multiple forks are maintained.
+    required: false
+    default: main
+  image-name:
+    description: The Docker image to run the checks on.
+    required: true
+  publish:
+    description: "Publish SBOM to Dependency Track"
+    required: false
+    default: "true"
+  report-retention-days:
+    description: Duration in days to preserve reports.
+    required: true
+    default: "5"
+  working-directory:
+    description: Relative path under $GITHUB_WORKSPACE where the root project is located.
+    required: false
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    - name: Action context
+      shell: bash
+      id: context
+      run: |
+        working_directory=$(realpath ${{ inputs.working-directory }})
+        echo "::set-output name=working-directory::$working_directory"
+        echo "::set-output name=bom-path::$working_directory/build/reports/bom.json"
+        echo "::set-output name=is-ecr::${{ inputs.aws-access-key-id != '' && inputs.aws-secret-access-key != '' && inputs.aws-region != '' }}"
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      if: steps.context.outputs.is-ecr == 'true'
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Login to ECR
+      uses: aws-actions/amazon-ecr-login@v1
+      if: steps.context.outputs.is-ecr == 'true'
+
+    - name: Pull and save image
+      shell: bash
+      run: |
+        docker pull ${{ inputs.image-name }}
+        docker save -o /tmp/image.tar ${{ inputs.image-name }}
+
+    - name: Generate Docker BOM
+      working-directory: ${{ steps.context.outputs.working-directory }}
+      shell: bash
+      run: |
+        ${{ github.action_path }}/files/docker-sbom.sh \
+          -o "${{ steps.context.outputs.bom-path }}" \
+          "${{ inputs.image-name }}"
+
+        result=$?
+        if [ $result -ne 0 ]; then
+          exit $result
+        fi
+
+    - name: Archive BOM
+      uses: actions/upload-artifact@v2
+      if: "!cancelled()"
+      with:
+        name: docker-bom.json
+        retention-days: ${{ inputs.report-retention-days }}
+        path: ${{ steps.context.outputs.bom-path }}
+
+    - name: Upload BOM
+      uses: DependencyTrack/gh-upload-sbom@v1.0.0
+      if: "!cancelled() && inputs.dependency-track-url != '' && inputs.publish == 'true'"
+      with:
+        autocreate: false
+        apikey: ${{ inputs.dependency-track-api-key }}
+        bomfilename: ${{ steps.context.outputs.bom-path }}
+        projectname: ${{ inputs.dependency-track-project-name }}
+        projectversion: ${{ inputs.dependency-track-project-version }}
+        serverhostname: ${{ inputs.dependency-track-url }}
