@@ -1,6 +1,6 @@
-name: Generate a CycloneDX SBOM and uploads it to Dependency Track
+name: Generate a CycloneDX SBOM and uploads it to Github
 description: |
-  Utilizes https://github.com/tern-tools/tern to generate a SBOM. This SBOM will then be archived and uploaded to Dependency-Track.
+  Utilizes https://github.com/tern-tools/tern to generate a SBOM. This SBOM will then be archived and uploaded to Github.
 
 inputs:
   aws-access-key-id:
@@ -15,24 +15,11 @@ inputs:
     description: AWS region for the registry.
     required: false
     default: ''
-  dependency-track-url:
-    description: URL to the Dependency Track instance to publish the SBOM to.
-    required: false
-  dependency-track-api-key:
-    description: API key of the Dependency Track instance.
-    required: false
-  dependency-track-project-name:
-    description: Project name for Dependency Track.
-    required: false
-  dependency-track-project-version:
-    description: Project name for Dependency Track. Typically the default branch unless multiple forks are maintained.
-    required: false
-    default: main
   image-name:
     description: The Docker image to run the checks on.
     required: true
   publish:
-    description: "Publish SBOM to Dependency Track"
+    description: "Publish SBOM to Github"
     required: false
     default: "true"
   report-retention-days:
@@ -96,12 +83,6 @@ runs:
         path: ${{ steps.context.outputs.bom-path }}
 
     - name: Upload BOM
-      uses: DependencyTrack/gh-upload-sbom@v1.0.0
-      if: "!cancelled() && inputs.dependency-track-url != '' && inputs.publish == 'true'"
+      uses: evryfs/sbom-dependency-submission-action@v0.0.1
       with:
-        autocreate: false
-        apikey: ${{ inputs.dependency-track-api-key }}
-        bomfilename: ${{ steps.context.outputs.bom-path }}
-        projectname: ${{ inputs.dependency-track-project-name }}
-        projectversion: ${{ inputs.dependency-track-project-version }}
-        serverhostname: ${{ inputs.dependency-track-url }}
+        sbom-files: ${{ steps.context.outputs.bom-path }}
