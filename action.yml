@@ -83,6 +83,6 @@ runs:
         path: ${{ steps.context.outputs.bom-path }}
 
     - name: Upload BOM
-      uses: evryfs/sbom-dependency-submission-action@v0.0.1
+      uses: evryfs/sbom-dependency-submission-action@v0.0.6
       with:
         sbom-files: ${{ steps.context.outputs.bom-path }}
