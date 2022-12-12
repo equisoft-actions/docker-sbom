@@ -4,11 +4,11 @@ description: |
 
 inputs:
   aws-access-key-id:
-    description: An AWS access key ID that has read permissions to the registry.
+    description: DEPRECATED. An AWS access key ID that has read permissions to the registry.
     required: false
     default: ''
   aws-secret-access-key:
-    description: An AWS secret access key that has read permissions to the registry.
+    description: DEPRECATED. An AWS secret access key that has read permissions to the registry.
     required: false
     default: ''
   aws-region:
@@ -18,14 +18,16 @@ inputs:
   image-name:
     description: The Docker image to run the checks on.
     required: true
-  publish:
-    description: "Publish SBOM to Github"
-    required: false
-    default: "true"
   report-retention-days:
     description: Duration in days to preserve reports.
     required: true
     default: "5"
+  role-to-assume:
+    description: Role to assume that has read access to the registry.
+    required: false
+  role-session-name:
+    description: Session name to use when assuming the role.
+    required: false
   working-directory:
     description: Relative path under $GITHUB_WORKSPACE where the root project is located.
     required: false
@@ -39,17 +41,20 @@ runs:
       id: context
       run: |
         working_directory=$(realpath ${{ inputs.working-directory }})
-        echo "::set-output name=working-directory::$working_directory"
-        echo "::set-output name=bom-path::$working_directory/build/reports/bom.json"
-        echo "::set-output name=is-ecr::${{ inputs.aws-access-key-id != '' && inputs.aws-secret-access-key != '' && inputs.aws-region != '' }}"
+        echo "working-directory=$working_directory" >> $GITHUB_OUTPUT
+        echo "bom-path=$working_directory/build/reports/bom.json" >> $GITHUB_OUTPUT
+        echo "has-role=${{ inputs.role-to-assume != '' }}" >> $GITHUB_OUTPUT
+        echo "is-ecr=${{ inputs.aws-region != '' }}" >> $GITHUB_OUTPUT
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       if: steps.context.outputs.is-ecr == 'true'
       with:
-        aws-access-key-id: ${{ inputs.aws-access-key-id }}
-        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-access-key-id: ${{ steps.context.outputs.has-role != 'true' && inputs.aws-access-key-id || '' }}
+        aws-secret-access-key: ${{ steps.context.outputs.has-role != 'true' && inputs.aws-secret-access-key || '' }}
         aws-region: ${{ inputs.aws-region }}
+        role-to-assume: ${{ inputs.role-to-assume }}
+        role-session-name: ${{ inputs.role-session-name }}
 
     - name: Login to ECR
       uses: aws-actions/amazon-ecr-login@v1
