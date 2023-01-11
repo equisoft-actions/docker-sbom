@@ -40,9 +40,14 @@ mkdir -p "$(dirname "$output_file")"
 touch "$output_file"
 
 output_file_path=$(realpath "$output_file")
+target_image=$1
 
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-  -v "$output_file_path":/root/output.json \
-  -v /tmp/image.tar:/tmp/image.tar \
-  philipssoftware/tern:2.9.1 \
-  report -f cyclonedxjson -o /root/output.json -w /tmp/image.tar
+  -v "$output_file_path":/tmp/output.json \
+  -u 0
+  aquasec/trivy:0.36.1 \
+  image \
+  --cache-dir /tmp/.cache \
+  -o /tmp/output.json \
+  --format cyclonedx \
+  "$target_image"

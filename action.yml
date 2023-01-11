@@ -1,6 +1,6 @@
 name: Generate a CycloneDX SBOM and uploads it to Github
 description: |
-  Utilizes https://github.com/tern-tools/tern to generate a SBOM. This SBOM will then be archived and uploaded to Github.
+  Utilizes Trivy to generate a SBOM. This SBOM will then be archived and uploaded to Github.
 
 inputs:
   aws-access-key-id:
@@ -59,12 +59,6 @@ runs:
     - name: Login to ECR
       uses: aws-actions/amazon-ecr-login@v1
       if: steps.context.outputs.is-ecr == 'true'
-
-    - name: Pull and save image
-      shell: bash
-      run: |
-        docker pull ${{ inputs.image-name }}
-        docker save -o /tmp/image.tar ${{ inputs.image-name }}
 
     - name: Generate Docker BOM
       working-directory: ${{ steps.context.outputs.working-directory }}
