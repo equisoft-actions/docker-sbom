@@ -44,10 +44,11 @@ target_image=$1
 
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -v "$output_file_path":/tmp/output.json \
-  -u 0 \
+  -u $(id -u):$(id -g) \
   aquasec/trivy:0.36.1 \
   image \
+  --vuln-type os \
   --cache-dir /tmp/.cache \
   -o /tmp/output.json \
-  --format cyclonedx \
+  --format github \
   "$target_image"
