@@ -44,7 +44,7 @@ target_image=$1
 
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -v "$output_file_path":/tmp/output.json \
-  -u 0 \
+  -u 0
   aquasec/trivy:0.36.1 \
   image \
   --cache-dir /tmp/.cache \
