@@ -64,6 +64,9 @@ runs:
       working-directory: ${{ steps.context.outputs.working-directory }}
       shell: bash
       run: |
+        set -euo pipefail
+
+        docker pull "${{ inputs.image-name }}"
         ${{ github.action_path }}/files/docker-sbom.sh \
           -o "${{ steps.context.outputs.bom-path }}" \
           "${{ inputs.image-name }}"
@@ -72,6 +75,13 @@ runs:
         if [ $result -ne 0 ]; then
           exit $result
         fi
+
+        # Add missing required 'job' attributes
+        jq --arg id "${{ github.run_id }}" --arg ref "${{ github.ref }}" --arg sha ${{ github.sha }} '. += {job: {correlator: $ref, id: $id}, ref: $ref, sha: $sha}' "${{ steps.context.outputs.bom-path }}" > "${{ steps.context.outputs.bom-path }}.tmp"
+        mv "${{ steps.context.outputs.bom-path }}.tmp" "${{ steps.context.outputs.bom-path }}"
+
+        # Replace apk with alpine
+        sed -i 's/pkg:apk/pkg:alpine/' "${{ steps.context.outputs.bom-path }}"
 
     - name: Archive BOM
       uses: actions/upload-artifact@v3
@@ -82,6 +92,8 @@ runs:
         path: ${{ steps.context.outputs.bom-path }}
 
     - name: Upload BOM
-      uses: evryfs/sbom-dependency-submission-action@v0.0.14
-      with:
-        sbom-files: ${{ steps.context.outputs.bom-path }}
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        curl -f -H 'Accept: application/vnd.github+json' -H "Authorization: Bearer ${{ github.token }}" 'https://api.github.com/repos/'$GITHUB_REPOSITORY'/dependency-graph/snapshots' -d "@${{ steps.context.outputs.bom-path }}"
