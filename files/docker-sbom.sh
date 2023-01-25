@@ -48,6 +48,7 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
   aquasec/trivy:0.36.1 \
   image \
   --vuln-type os \
+  --security-checks vuln \
   --cache-dir /tmp/.cache \
   -o /tmp/output.json \
   --format github \
