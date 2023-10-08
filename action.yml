@@ -57,7 +57,7 @@ runs:
         role-session-name: ${{ inputs.role-session-name }}
 
     - name: Login to ECR
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v2
       if: steps.context.outputs.is-ecr == 'true'
 
     - name: Generate Docker BOM
