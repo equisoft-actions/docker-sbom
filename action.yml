@@ -84,7 +84,7 @@ runs:
         sed -i 's/pkg:apk/pkg:alpine/' "${{ steps.context.outputs.bom-path }}"
 
     - name: Archive BOM
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: "!cancelled()"
       with:
         name: docker-bom.json
