@@ -41,7 +41,12 @@ runs:
       id: context
       run: |
         working_directory=$(realpath ${{ inputs.working-directory }})
+        bom_artifact_name="${{ inputs.image-name }}"
+        # Remove registry and version from the image name to get the artifact name
+        bom_artifact_name=${bom_artifact_name%:*}
+        bom_artifact_name="${bom_artifact_name##*/}.docker-bom.json"
         echo "working-directory=$working_directory" >> $GITHUB_OUTPUT
+        echo "bom-artifact-name=$bom_artifact_name" >> $GITHUB_OUTPUT
         echo "bom-path=$working_directory/build/reports/bom.json" >> $GITHUB_OUTPUT
         echo "has-role=${{ inputs.role-to-assume != '' }}" >> $GITHUB_OUTPUT
         echo "is-ecr=${{ inputs.aws-region != '' }}" >> $GITHUB_OUTPUT
@@ -87,7 +92,7 @@ runs:
       uses: actions/upload-artifact@v4
       if: "!cancelled()"
       with:
-        name: docker-bom.json
+        name: ${{ steps.context.outputs.bom-artifact-name }}
         retention-days: ${{ inputs.report-retention-days }}
         path: ${{ steps.context.outputs.bom-path }}
 
