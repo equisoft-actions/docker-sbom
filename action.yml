@@ -43,7 +43,7 @@ runs:
         working_directory=$(realpath ${{ inputs.working-directory }})
         bom_artifact_name="${{ inputs.image-name }}"
         # Remove the registry from the image name
-        bom_artifact_name="${sbom_name##*/}.docker-bom.json"
+        bom_artifact_name="${bom_artifact_name##*/}.docker-bom.json"
         echo "working-directory=$working_directory" >> $GITHUB_OUTPUT
         echo "bom-artifact-name=$bom_artifact_name" >> $GITHUB_OUTPUT
         echo "bom-path=$working_directory/build/reports/bom.json" >> $GITHUB_OUTPUT
