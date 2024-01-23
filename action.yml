@@ -42,7 +42,8 @@ runs:
       run: |
         working_directory=$(realpath ${{ inputs.working-directory }})
         bom_artifact_name="${{ inputs.image-name }}"
-        # Remove the registry from the image name
+        # Remove registry and version from the image name to get the artifact name
+        bom_artifact_name=${bom_artifact_name%:*}
         bom_artifact_name="${bom_artifact_name##*/}.docker-bom.json"
         echo "working-directory=$working_directory" >> $GITHUB_OUTPUT
         echo "bom-artifact-name=$bom_artifact_name" >> $GITHUB_OUTPUT
