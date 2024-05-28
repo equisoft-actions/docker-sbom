@@ -7,6 +7,8 @@
 set -eo pipefail
 
 DEFAULT_OUTPUT_FILE="./docker-sbom.json"
+# renovate: datasource=docker depName=aquasec/trivy
+TRIVY_VERSION="0.51.4"
 
 usage() {
   echo "Usage: $0 [-o result-file] [image-to-scan]"
@@ -45,7 +47,7 @@ target_image=$1
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -v "$output_file_path":/tmp/output.json \
   -u $(id -u):$(id -g) \
-  aquasec/trivy:0.36.1 \
+  "aquasec/trivy:$TRIVY_VERSION" \
   image \
   --vuln-type os \
   --security-checks vuln \
