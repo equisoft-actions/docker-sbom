@@ -8,7 +8,7 @@ set -eo pipefail
 
 DEFAULT_OUTPUT_FILE="./docker-sbom.json"
 # renovate: datasource=docker depName=aquasec/trivy
-TRIVY_VERSION="0.53.0"
+TRIVY_VERSION="0.54.1"
 
 usage() {
   echo "Usage: $0 [-o result-file] [image-to-scan]"
