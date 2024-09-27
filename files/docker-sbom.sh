@@ -49,9 +49,10 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -u $(id -u):$(id -g) \
   "aquasec/trivy:$TRIVY_VERSION" \
   image \
-  --vuln-type os \
-  --security-checks vuln \
   --cache-dir /tmp/.cache \
+  --scanners vuln \
+  --pkg-types os \
+  --db-repository public.ecr.aws/aquasecurity/trivy-db \
   -o /tmp/output.json \
   --format github \
   "$target_image"
