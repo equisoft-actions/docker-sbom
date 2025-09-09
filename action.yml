@@ -67,6 +67,8 @@ runs:
 
     - name: Generate Docker BOM
       working-directory: ${{ steps.context.outputs.working-directory }}
+      env:
+        TMPDIR: ${{ runner.temp }}
       shell: bash
       run: |
         set -euo pipefail
