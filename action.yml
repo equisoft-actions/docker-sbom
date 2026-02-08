@@ -52,7 +52,7 @@ runs:
         echo "is-ecr=${{ inputs.aws-region != '' }}" >> $GITHUB_OUTPUT
 
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v5
+      uses: aws-actions/configure-aws-credentials@v6
       if: steps.context.outputs.is-ecr == 'true'
       with:
         aws-access-key-id: ${{ steps.context.outputs.has-role != 'true' && inputs.aws-access-key-id || '' }}
