@@ -65,23 +65,27 @@ runs:
       uses: aws-actions/amazon-ecr-login@v2
       if: steps.context.outputs.is-ecr == 'true'
 
-    - name: Generate Docker BOM
-      working-directory: ${{ steps.context.outputs.working-directory }}
-      env:
-        TMPDIR: ${{ runner.temp }}
+    - name: Create output directory
       shell: bash
+      run: mkdir -p "$(dirname "${{ steps.context.outputs.bom-path }}")"
+
+    - name: Generate Docker BOM
+      uses: aquasecurity/trivy-action@0.34.0
+      with:
+        scan-type: 'image'
+        image-ref: '${{ inputs.image-name }}'
+        format: 'github'
+        output: '${{ steps.context.outputs.bom-path }}'
+        scanners: 'vuln'
+        vuln-type: 'os'
+      env:
+        TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db
+
+    - name: Post-process BOM
+      shell: bash
+      if: "!cancelled()"
       run: |
         set -euo pipefail
-
-        docker pull "${{ inputs.image-name }}"
-        ${{ github.action_path }}/files/docker-sbom.sh \
-          -o "${{ steps.context.outputs.bom-path }}" \
-          "${{ inputs.image-name }}"
-
-        result=$?
-        if [ $result -ne 0 ]; then
-          exit $result
-        fi
 
         # Add missing required 'job' attributes
         jq --arg id "${{ github.run_id }}" --arg ref "${{ github.ref }}" --arg sha ${{ github.sha }} '. += {job: {correlator: $ref, id: $id}, ref: $ref, sha: $sha}' "${{ steps.context.outputs.bom-path }}" > "${{ steps.context.outputs.bom-path }}.tmp"
