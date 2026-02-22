@@ -70,7 +70,7 @@ runs:
       run: mkdir -p "$(dirname "${{ steps.context.outputs.bom-path }}")"
 
     - name: Generate Docker BOM
-      uses: aquasecurity/trivy-action@0.34.0
+      uses: aquasecurity/trivy-action@0.34.1
       with:
         scan-type: 'image'
         image-ref: '${{ inputs.image-name }}'
