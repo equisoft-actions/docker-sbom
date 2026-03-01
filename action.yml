@@ -95,7 +95,7 @@ runs:
         sed -i 's/pkg:apk/pkg:alpine/' "${{ steps.context.outputs.bom-path }}"
 
     - name: Archive BOM
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       if: "!cancelled()"
       with:
         name: ${{ steps.context.outputs.bom-artifact-name }}
