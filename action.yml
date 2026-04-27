@@ -52,7 +52,7 @@ runs:
         echo "is-ecr=${{ inputs.aws-region != '' }}" >> $GITHUB_OUTPUT
 
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v6
+      uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6
       if: steps.context.outputs.is-ecr == 'true'
       with:
         aws-access-key-id: ${{ steps.context.outputs.has-role != 'true' && inputs.aws-access-key-id || '' }}
@@ -62,7 +62,7 @@ runs:
         role-session-name: ${{ inputs.role-session-name }}
 
     - name: Login to ECR
-      uses: aws-actions/amazon-ecr-login@v2
+      uses: aws-actions/amazon-ecr-login@19d944daaa35f0fa1d3f7f8af1d3f2e5de25c5b7 # v2
       if: steps.context.outputs.is-ecr == 'true'
 
     - name: Create output directory
@@ -95,7 +95,7 @@ runs:
         sed -i 's/pkg:apk/pkg:alpine/' "${{ steps.context.outputs.bom-path }}"
 
     - name: Archive BOM
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       if: "!cancelled()"
       with:
         name: ${{ steps.context.outputs.bom-artifact-name }}
